@@ -1,0 +1,41 @@
+kind: Project
+name: remote-development
+defaultEnvironment: local
+environments:
+  - name: local
+    defaultNamespace: default
+    variables:
+      baseHostname: local.garden.guide
+  - name: remote
+    defaultNamespace: ${local.username}
+    variables:
+      baseHostname: ${project.name}-remote-${local.username}.YOUR_DOMAIN.tld
+providers:
+  - name: local-kubernetes
+    environments: [local]
+    setupIngressController: false
+    context: YOUR_LOCAL_CONTEXT
+  - name: kubernetes
+    environments: [remote]
+    setupIngressController: false
+    context: YOUR_REMOTE_CONTEXT
+    namespace: ${project.name}-remote-${local.username}
+    defaultHostname: ${var.baseHostname}   
+    forceSsl: false
+    tlsCertificates:
+      - name: garden-example-tls 
+        secretRef:
+          name: garden-example-tls # change this to the name you used for the secret
+          namespace: default
+    buildMode: kaniko
+    kaniko:
+      namespace: null
+    # Replace the below values as appropriate
+    deploymentRegistry:
+      hostname: YOUR_REGISTRY_DOMAIN    # <- set this according to the region your cluster runs in
+      namespace: YOUR_REGISTRY_NAMESPACE   # <- set this to the project ID of the target cluster
+    imagePullSecrets:
+      # Make sure this matches the name and namespace of the imagePullSecret you've created
+      # to authenticate with your registry (if needed)
+      - name: CHANGE_ACCORDINGLY
+        namespace: default
